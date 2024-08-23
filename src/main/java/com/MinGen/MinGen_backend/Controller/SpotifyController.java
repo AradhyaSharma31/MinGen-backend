@@ -50,22 +50,19 @@ public class SpotifyController {
     @Autowired
     private PlaylistService playlistService;
 
-    // Store state values in memory for simplicity (use a more robust solution for production)
     private Map<String, String> stateStore = new ConcurrentHashMap<>();
 
     @GetMapping("/login")
     public ResponseEntity<Map<String, String>> spotifyLogin() {
         try {
-            // Generate random state string
             String state = generateRandomString(16);
 
-            // Store state in the state store
             stateStore.put(state, "pending");
 
             SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
             AuthorizationCodeUriRequest authorizationCodeUriRequest = spotifyApi.authorizationCodeUri()
                     .scope("user-library-read user-top-read user-read-email user-read-private playlist-modify-public playlist-modify-private")
-                    .state(state) // Add the state parameter to the request
+                    .state(state)
                     .show_dialog(true)
                     .build();
 
@@ -87,37 +84,23 @@ public class SpotifyController {
         try {
             SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
 
-            // Check if the state is valid and matches the stored state (security check)
-//            if (!userProfileService.isValidState(state)) {
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                        .body(Map.of("error", "Invalid state parameter"));
-//            }
-
-            // Exchange authorization code for tokens
             AuthorizationCodeRequest authorizationCodeRequest = spotifyApi.authorizationCode(userCode).build();
             AuthorizationCodeCredentials authorizationCode = authorizationCodeRequest.execute();
 
-            // Create a new SpotifyApi instance with the obtained tokens
             spotifyApi.setAccessToken(authorizationCode.getAccessToken());
             spotifyApi.setRefreshToken(authorizationCode.getRefreshToken());
 
-            // Fetch user profile
             GetCurrentUsersProfileRequest getCurrentUsersProfile = spotifyApi.getCurrentUsersProfile().build();
             User user = getCurrentUsersProfile.execute();
 
-            // Check if the user already exists
             if (userProfileService.userExists(user.getId())) {
-                // Check if the token has expired
                 if (userProfileService.isTokenExpired(user.getId())) {
-                    // Refresh the token using the refresh token
                     spotifyApi = refreshAccessToken(userProfileService.getRefreshToken(user.getId()), user.getId());
                 }
             }
 
-            // Store user details in the database
             userProfileService.InsertOrUpdateUserDetails(user, spotifyApi.getAccessToken(), spotifyApi.getRefreshToken());
 
-            // Prepare response
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("userId", user.getId());
             responseData.put("username", user.getDisplayName());
@@ -173,7 +156,6 @@ public class SpotifyController {
     @GetMapping("/home")
     public ResponseEntity<String> home(@RequestParam String userId) {
         try {
-            // Assuming home endpoint is meant to return userId for testing
             return ResponseEntity.ok(userId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -205,7 +187,7 @@ public class SpotifyController {
         // Update the SpotifyApi instance with the new access token
         spotifyApi.setAccessToken(authorizationCodeCredentials.getAccessToken());
 
-        // Optionally update the user's access token in your database
+        // update the user's access token in your database
         userProfileService.updateAccessToken(userProfileService.getUserById(userId), authorizationCodeCredentials.getAccessToken());
 
         return spotifyApi;
