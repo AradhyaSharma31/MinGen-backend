@@ -54,7 +54,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean isTokenExpired(String userId) {
         UserDetails user = userRepo.findByRefId(userId);
-        // Implement logic to check if the token has expired (e.g., based on timestamp)
         return user.getTokenExpirationTime().isBefore(Instant.from(LocalTime.now()));
     }
 
