@@ -178,16 +178,16 @@ public class SpotifyController {
 
         SpotifyApi spotifyApi = spotifyConfiguration.getSpotifyObject();
 
-        // Use the refresh token to get a new access token
+        // Using the refresh token to get a new access token
         AuthorizationCodeCredentials authorizationCodeCredentials = spotifyApi.authorizationCodeRefresh()
                 .refresh_token(refreshToken)
                 .build()
                 .execute();
 
-        // Update the SpotifyApi instance with the new access token
+        // Updating the SpotifyApi instance with the new access token
         spotifyApi.setAccessToken(authorizationCodeCredentials.getAccessToken());
 
-        // update the user's access token in your database
+        // updating the user's access token in database
         userProfileService.updateAccessToken(userProfileService.getUserById(userId), authorizationCodeCredentials.getAccessToken());
 
         return spotifyApi;
