@@ -39,7 +39,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getUserById(String userId) {
-        // Find the user by ID using the repository
         UserDetails userDetails = userRepo.findByRefId(userId);
 
         return userDetails.getRefId();
