@@ -51,7 +51,7 @@ public class PlaylistServiceImpl implements PlaylistService {
             playlist.setPublic(isPublic);
             playlist.setOwner(owner);
             playlist.setCreatedAt(new Date());
-            playlist.setPlaylistId(spotifyPlaylist.getId()); // Add this line
+            playlist.setPlaylistId(spotifyPlaylist.getId());
 
             playlistRepo.save(playlist);
 
